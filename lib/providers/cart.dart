@@ -22,15 +22,15 @@ class Cart with ChangeNotifier {
   }
 
   int get itemCount {
-    return  _items.length;
+    return _items.length;
   }
 
   double get totalAmount {
     var total = 0.0;
     _items.forEach((key, cartItem) {
       total += cartItem.price * cartItem.quantity;
-     });
-     return total;
+    });
+    return total;
   }
 
   void addItem(
@@ -49,7 +49,7 @@ class Cart with ChangeNotifier {
               price: existingCartItem.price));
     } else {
       _items.putIfAbsent(
-        productId,    
+        productId,
         () => CartItem(
           id: DateTime.now().toString(),
           title: title,
@@ -58,6 +58,38 @@ class Cart with ChangeNotifier {
         ),
       );
     }
+    notifyListeners();
+  }
+
+  void removeItem(String productId) {
+    _items.remove(productId);
+    notifyListeners();
+  }
+
+  void removeSingleItem(String productId) {
+    if (!_items.containsKey(productId)) {
+      return;
+    }
+    if (_items[productId].quantity > 1) {
+      _items.update(
+        productId,
+        (existinCartItem) => CartItem(
+          id: existinCartItem.id,
+          title: existinCartItem.title,
+          quantity: existinCartItem.quantity -1,
+          price: existinCartItem.price,
+          ),
+        );
+    }
+        else {
+          _items.remove(productId);
+        }
+      notifyListeners();
+    }
+  
+
+  void clear() {
+    _items = {};
     notifyListeners();
   }
 }

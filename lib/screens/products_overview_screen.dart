@@ -7,6 +7,7 @@ import '../widgets/badge.dart';
 import './cart_screen.dart';
 import '../screens/cart_screen.dart';
 import '../widgets/app_draw.dart';
+import '../providers/products.dart';
 
 enum FilterOptions {
   Favorites,
@@ -20,6 +21,52 @@ class ProductsOverviewScreen extends StatefulWidget {
 
 class _ProductsOverviewScreenState extends State<ProductsOverviewScreen> {
   var _showOnlyFavorites = false;
+  var _isInit = true;
+  var _isLoading = false;
+
+  @override
+  void initState() {
+    // Provider.of<Products>(context).fetchAndSetProducts(); WON'T WORK
+    // Future.delayed(Duration.zero).then((_) {
+    //   Provider.of<Products>(context).fetchAndSetProducts(); WILL WORK
+    // });
+    super.initState();
+  }
+
+  @override
+  void didChangeDependencies() async {
+    if (_isInit) {
+      setState(() {
+        _isLoading = true;
+      });
+      try {
+        await Provider.of<Products>(context, listen: false)
+            .fetchAndSetProducts()
+            .then((_) {
+          setState(() {
+            _isLoading = false;
+          });
+        });
+      } catch (error) {
+        showDialog<Null>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Text('An error occured!'),
+            content: Text(error.toString()),
+            actions: [
+              FlatButton(
+                  onPressed: () {
+                    Navigator.of(ctx).pop();
+                  },
+                  child: Text('OK'))
+            ],
+          ),
+        );
+      }
+    }
+    _isInit = false;
+    super.didChangeDependencies();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -56,17 +103,23 @@ class _ProductsOverviewScreenState extends State<ProductsOverviewScreen> {
               child: ch,
               value: cartData.itemCount.toString(),
             ),
-             child: IconButton(
-                icon: Icon(Icons.shopping_cart),
-                onPressed: (){
-                  Navigator.of(context).pushNamed(CartScreen.routeName,);
-                },
-              ),
+            child: IconButton(
+              icon: Icon(Icons.shopping_cart),
+              onPressed: () {
+                Navigator.of(context).pushNamed(
+                  CartScreen.routeName,
+                );
+              },
+            ),
           ),
         ],
       ),
       drawer: AppDrawer(),
-      body: ProductsGrid(_showOnlyFavorites),
+      body: _isLoading
+          ? Center(
+              child: CircularProgressIndicator(),
+            )
+          : ProductsGrid(_showOnlyFavorites),
     );
   }
 }

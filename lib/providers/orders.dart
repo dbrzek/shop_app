@@ -21,19 +21,19 @@ class OrderItem {
 
 class Orders with ChangeNotifier {
   List<OrderItem> _orders = [];
-  // final String authToken;
+  final String authToken;
 
-  // Orders(this.authToken, this._orders);
+  Orders(this.authToken, this._orders);
 
-  List<OrderItem> get ordeers {
+  List<OrderItem> get orders {
     return [..._orders];
   }
 
   Future<void> fetchAndSetOrders() async {
     final url = Uri.https(
         'shop-app-763cd-default-rtdb.europe-west1.firebasedatabase.app',
-        '/orders.json',);
-        // {'auth': '$authToken'});
+        '/orders.json',
+        {'auth': '$authToken'});
     try {
       final response = await http.get(
         url,
@@ -48,19 +48,17 @@ class Orders with ChangeNotifier {
           OrderItem(
             id: orderId,
             amount: orderData['amount'],
+            dateTime: DateTime.parse(orderData['dateTime']),
             products: (orderData['products'] as List<dynamic>)
                 .map(
                   (item) => CartItem(
                     id: item['id'],
-                    title: item['title'],
-                    quantity: item['quantity'],
                     price: item['price'],
+                    quantity: item['quantity'],
+                    title: item['title'],
                   ),
                 )
                 .toList(),
-            dateTime: DateTime.parse(
-              orderData['dateTime'],
-            ),
           ),
         );
       });
@@ -75,13 +73,13 @@ class Orders with ChangeNotifier {
   Future<void> addOrder(List<CartItem> cartProducts, double total) async {
     final url = Uri.https(
         'shop-app-763cd-default-rtdb.europe-west1.firebasedatabase.app',
-        '/orders.json',);
-        // {'auth': '$authToken'});
-        try {
-    final timestamp = DateTime.now();
-    final response = await http.post(
-      url,
-      body: json.encode({
+        '/orders.json',
+        {'auth': '$authToken'});
+    try {
+      final timestamp = DateTime.now();
+      final response = await http.post(
+        url,
+        body: json.encode({
         'amount': total,
         'dateTime': timestamp.toIso8601String(),
         'products': cartProducts
@@ -91,7 +89,7 @@ class Orders with ChangeNotifier {
                   'quantity': cp.quantity,
                   'price': cp.price,
                 })
-            .toString(),
+            .toList(),
       }),
     );
     _orders.insert(
@@ -99,11 +97,11 @@ class Orders with ChangeNotifier {
       OrderItem(
         id: json.decode(response.body)['name'],
         amount: total,
-        products: cartProducts,
         dateTime: timestamp,
+        products: cartProducts,
       ),
     );
-    notifyListeners();
+      notifyListeners();
     } catch (error) {
       print(error);
       throw error;

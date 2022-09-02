@@ -24,8 +24,8 @@ class AuthScreen extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  Color.fromRGBO(215, 117, 255, 1).withOpacity(0.5),
-                  Color.fromRGBO(255, 188, 117, 1).withOpacity(0.9),
+                  Color.fromARGB(255, 244, 241, 47).withOpacity(0.5),
+                  Color.fromARGB(255, 67, 211, 14).withOpacity(0.9),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -51,7 +51,7 @@ class AuthScreen extends StatelessWidget {
                       // ..translate(-10.0),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(20),
-                        color: Colors.deepOrange.shade900,
+                        color: Color.fromARGB(255, 107, 191, 12),
                         boxShadow: [
                           BoxShadow(
                             blurRadius: 8,
@@ -61,11 +61,11 @@ class AuthScreen extends StatelessWidget {
                         ],
                       ),
                       child: Text(
-                        'MyShop',
+                        'Market Place',
                         style: TextStyle(
                           color:
                               Theme.of(context).accentTextTheme.headline6.color,
-                          fontSize: 50,
+                          fontSize: 38,
                           fontFamily: 'Anton',
                           fontWeight: FontWeight.normal,
                         ),

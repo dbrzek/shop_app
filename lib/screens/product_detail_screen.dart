@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../providers/products.dart';
+import '../providers/cart.dart';
 
 class ProductDetailScreen extends StatelessWidget {
   // final String title;
@@ -14,6 +15,7 @@ class ProductDetailScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final productId =
         ModalRoute.of(context).settings.arguments as String; // is the id!
+    final cart = Provider.of<Cart>(context, listen: false);
     final loadedProduct = Provider.of<Products>(
       context,
       listen: false,
@@ -45,9 +47,10 @@ class ProductDetailScreen extends StatelessWidget {
                   height: 10,
                 ),
                 Text(
-                  '\$${loadedProduct.price}',
+                  'Price: \$${loadedProduct.price}',
                   style: TextStyle(
-                    color: Colors.grey,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
                     fontSize: 20,
                   ),
                   textAlign: TextAlign.center,
@@ -57,10 +60,53 @@ class ProductDetailScreen extends StatelessWidget {
                 ),
                 Container(
                   padding: EdgeInsets.symmetric(horizontal: 10),
-                  child: Text(
-                    loadedProduct.description,
-                    textAlign: TextAlign.center,
-                    softWrap: true,
+                  child: Column(
+                    children: [
+                      Text(
+                        'Description:',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                          fontSize: 15,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      SizedBox(
+                        height: 10,
+                      ),
+                      Text(
+                        loadedProduct.description,
+                        textAlign: TextAlign.center,
+                        softWrap: true,
+                      ),
+                      SizedBox(
+                        height: 15,
+                      ),
+                      OutlinedButton(
+                        onPressed: () {
+                          cart.addItem(
+                            loadedProduct.id,
+                            loadedProduct.price,
+                            loadedProduct.title,
+                          );
+                        },
+                        child: Text(
+                          'Add to cart',
+                          style: TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.orange),
+                        ),
+                        style: OutlinedButton.styleFrom(
+                          primary: Colors.orange,
+                          minimumSize: Size(88, 36),
+                          padding: EdgeInsets.symmetric(horizontal: 16),
+                          shape: const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.all(Radius.circular(15)),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
                 SizedBox(

@@ -1,8 +1,13 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_core/firebase_core.dart';
 
 import '../providers/product.dart';
 import '../providers/products.dart';
+import '../widgets/image_in_put.dart';
 
 class EditProductsScreen extends StatefulWidget {
   //const EditProductsScreen({ Key? key }) : super(key: key);
@@ -15,9 +20,9 @@ class EditProductsScreen extends StatefulWidget {
 class _EditProductsScreenState extends State<EditProductsScreen> {
   final _priceFocusNode = FocusNode();
   final _descriptionFocusNode = FocusNode();
-  final _imageUrlController = TextEditingController();
-  final _imageUrlFocusNode = FocusNode();
   final _form = GlobalKey<FormState>();
+  File _pickedImage;
+  String imageUrl;
   var _editProduct = Product(
     id: null,
     title: '',
@@ -34,10 +39,17 @@ class _EditProductsScreenState extends State<EditProductsScreen> {
   var _isInit = true;
   var _isLoading = false;
 
+  _selectImage(File pickedImage) async {
+    _pickedImage = pickedImage;
+  }
+
   @override
   void initState() {
-    _imageUrlFocusNode.addListener(_updateImageUrl);
     super.initState();
+    Firebase.initializeApp().whenComplete(() {
+      print("completed");
+      setState(() {});
+    });
   }
 
   @override
@@ -51,36 +63,18 @@ class _EditProductsScreenState extends State<EditProductsScreen> {
           'title': _editProduct.title,
           'description': _editProduct.description,
           'price': _editProduct.price.toString(),
-          //'imageUrl': _editProduct.imageUrl,
-          'imageUrl': '',
+          'imageUrl': _editProduct.imageUrl,
         };
-        _imageUrlController.text = _editProduct.imageUrl;
       }
     }
     _isInit = false;
     super.didChangeDependencies();
   }
 
-  void _updateImageUrl() {
-    if (!_imageUrlFocusNode.hasFocus) {
-      if ((!_imageUrlController.text.startsWith('http') &&
-              !_imageUrlController.text.startsWith('https')) ||
-          (!_imageUrlController.text.endsWith('.png') &&
-              !_imageUrlController.text.endsWith('.jpg') &&
-              !_imageUrlController.text.endsWith('.jpge'))) {
-        return;
-      }
-    }
-    setState(() {});
-  }
-
   @override
   void dispose() {
-    _imageUrlFocusNode.removeListener(_updateImageUrl);
     _priceFocusNode.dispose();
     _descriptionFocusNode.dispose();
-    _imageUrlController.dispose();
-    _imageUrlFocusNode.dispose();
     super.dispose();
   }
 
@@ -93,6 +87,14 @@ class _EditProductsScreenState extends State<EditProductsScreen> {
     setState(() {
       _isLoading = true;
     });
+
+    final ref = FirebaseStorage.instance
+        .ref()
+        .child('items_image')
+        .child(_pickedImage.path + '.jpg'); // _pickedImage.path ??
+    await ref.putFile(_pickedImage); // send image to firebase storage
+    final url = await ref.getDownloadURL();
+    _editProduct.imageUrl = url;
 
     if (_editProduct.id != null) {
       await Provider.of<Products>(context, listen: false)
@@ -127,6 +129,7 @@ class _EditProductsScreenState extends State<EditProductsScreen> {
       //   });
       //   Navigator.of(context).pop();
       // }
+      // Executes code regardless of success "try"
       setState(() {
         _isLoading = false;
       });
@@ -136,6 +139,15 @@ class _EditProductsScreenState extends State<EditProductsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    String loadedProductImageUrl = '';
+    final productId = ModalRoute.of(context).settings.arguments as String;
+    if (productId != null) {
+      loadedProductImageUrl = Provider.of<Products>(
+        context,
+        listen: false,
+      ).findById(productId).imageUrl;
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: Text('Edit Product'),
@@ -238,71 +250,10 @@ class _EditProductsScreenState extends State<EditProductsScreen> {
                         );
                       },
                     ),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Container(
-                          width: 100,
-                          height: 100,
-                          margin: EdgeInsets.only(
-                            top: 8,
-                            right: 10,
-                          ),
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              width: 1,
-                              color: Colors.grey,
-                            ),
-                          ),
-                          child: _imageUrlController.text.isEmpty
-                              ? Text('Enter URL')
-                              : FittedBox(
-                                  child: Image.network(
-                                    _imageUrlController.text,
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                        ),
-                        Expanded(
-                          child: TextFormField(
-                            decoration: InputDecoration(labelText: 'Image URL'),
-                            keyboardType: TextInputType.url,
-                            textInputAction: TextInputAction.done,
-                            controller: _imageUrlController,
-                            focusNode: _imageUrlFocusNode,
-                            onFieldSubmitted: (_) => _saveForm(),
-                            // onEditingComplete: () {
-                            //   setState(() {});
-                            // },
-                            validator: (value) {
-                              if (value.isEmpty) {
-                                return 'Please enter an image URL.';
-                              }
-                              if (!value.startsWith('http') &&
-                                  !value.startsWith('https')) {
-                                return 'Please a valid URL';
-                              }
-                              if (!value.endsWith('.png') &&
-                                  !value.endsWith('.jpg') &&
-                                  !value.endsWith('.jpge')) {
-                                return 'Please enter a valid image URL.';
-                              }
-                              return null;
-                            },
-                            onSaved: (value) {
-                              _editProduct = Product(
-                                title: _editProduct.title,
-                                price: _editProduct.price,
-                                description: _editProduct.description,
-                                imageUrl: value,
-                                id: _editProduct.id,
-                                isFavorite: _editProduct.isFavorite,
-                              );
-                            },
-                          ),
-                        ),
-                      ],
-                    )
+                    SizedBox(
+                      height: 10,
+                    ),
+                    ImageInput(_selectImage, loadedProductImageUrl),
                   ],
                 ),
               ),

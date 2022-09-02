@@ -61,17 +61,7 @@ class Products with ChangeNotifier {
   Product findById(String id) {
     return _items.firstWhere((prod) => prod.id == id);
   }
-
-  // void showFavoritesOnly() {
-  //   _showFavoritesOnly = true;
-  //   notifyListeners();
-  // }
-
-  // void showAll() {
-  //   _showFavoritesOnly = false;
-  //   notifyListeners();
-  // }
-
+  
   Future<void> fetchAndSetProducts([bool filterByUser = false]) async {
     var _params;
     if (filterByUser) {
@@ -87,18 +77,7 @@ class Products with ChangeNotifier {
     final url = Uri.https(
         'shop-app-763cd-default-rtdb.europe-west1.firebasedatabase.app',
         '/products.json', _params);
-    print(url);
-    // final url = Uri.https(
-    //   "shop-app-763cd-default-rtdb.europe-west1.firebasedatabase.app",
-    //   "/products.json",
-    //   {
-    //     "auth": authToken,
-    //     "orderBy": json.encode("creatorId"),
-    //     "equalTo": json.encode(userId),
-    //   },
-    // );
 
-    print(url);
     try {
       final response = await http.get(url);
       final extractedData = json.decode(response.body) as Map<String, dynamic>;

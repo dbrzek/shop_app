@@ -7,7 +7,7 @@ import '../widgets/app_draw.dart';
 import './edit_product_screen.dart';
 
 class UserProductsScreen extends StatelessWidget {
-  //const UserProductsScreen({ Key? key }) : super(key: key);
+  const UserProductsScreen({ Key key }) : super(key: key);
   static const routeName = '/user-products';
 
   Future<void> _refreshProducts(BuildContext context) async {
@@ -38,7 +38,7 @@ class UserProductsScreen extends StatelessWidget {
                 ? Center(
                     child: CircularProgressIndicator(),
                   )
-                : RefreshIndicator(
+                : RefreshIndicator(                                  //Widget, which you can refresh by pull down, which execute onRefresh function
                     onRefresh: () => _refreshProducts(context),
                     child: Consumer<Products>(
                       builder: (ctx, productsData, _) => Padding(
